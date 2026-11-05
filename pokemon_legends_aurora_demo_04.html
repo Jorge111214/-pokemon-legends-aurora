@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Pokémon Legends – Aurora | Primera demo</title>
+<style>
+:root{--ink:#10233a;--panel:rgba(8,22,39,.88);--gold:#ffe28a}
+*{box-sizing:border-box} html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10243a;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:white;touch-action:none}
+#game{display:block;width:100vw;height:100vh;background:#7fb58b}
+#hud{position:fixed;inset:0;pointer-events:none}
+.panel{background:var(--panel);border:1px solid #ffffff35;border-radius:14px;padding:9px 12px;box-shadow:0 5px 18px #0004}
+#brand{position:absolute;top:10px;left:10px;font-weight:900;letter-spacing:.04em;font-size:14px}
+#status{position:absolute;top:10px;right:10px;text-align:right;font-size:12px;max-width:48%}
+#message{position:absolute;left:50%;top:18%;transform:translateX(-50%);width:min(90%,420px);text-align:center;font-weight:700;font-size:14px;display:none}
+#controls{position:absolute;bottom:14px;left:0;right:0;display:flex;justify-content:space-between;align-items:end;padding:0 16px;pointer-events:none}
+.pad{display:grid;grid-template-columns:48px 48px 48px;grid-template-rows:48px 48px 48px;gap:3px;pointer-events:auto}
+.ctrl,.action{border:1px solid #ffffff66;background:#102b49cc;color:white;border-radius:13px;font-size:20px;font-weight:800;touch-action:none}
+.ctrl:active,.action:active{background:#3e7898}
+.pad .up{grid-column:2}.pad .left{grid-column:1;grid-row:2}.pad .down{grid-column:2;grid-row:2}.pad .right{grid-column:3;grid-row:2}
+.actions{display:flex;flex-direction:column;gap:8px;pointer-events:auto}
+.action{font-size:13px;padding:12px 14px;min-width:104px}
+#modal{position:fixed;inset:0;background:#061323d9;z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px;z-index:5}
+#card{width:min(520px,100%);background:linear-gradient(145deg,#193b56,#102237);border:1px solid #ffffff55;border-radius:22px;padding:22px;box-shadow:0 18px 60px #0008}
+h1{font-size:24px;margin:0 0 6px}p{line-height:1.45;color:#e3edf5;font-size:14px}
+.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.choice{border:1px solid #ffffff70;border-radius:14px;background:#ffffff18;color:white;padding:12px 5px;min-height:76px;font-weight:700;font-size:13px;cursor:pointer;touch-action:manipulation;position:relative;z-index:10;pointer-events:auto;-webkit-tap-highlight-color:rgba(255,255,255,.25)}
+.choice.selected{outline:3px solid var(--gold);background:#ffffff25}
+#start,#throw,#close{position:relative;z-index:10000;pointer-events:auto;touch-action:manipulation;-webkit-appearance:none;background:#f2cf70;color:#1d2c3c;border:0;border-radius:12px;padding:12px 16px;font-weight:900;width:100%;font-size:15px}
+small{color:#c4d5e4}
+@media(min-width:700px){#controls{padding:0 28px 18px}.ctrl{width:56px;height:56px}.pad{grid-template-columns:56px 56px 56px;grid-template-rows:56px 56px 56px}}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud">
+ <div id="brand" class="panel">POKÉMON LEGENDS – AURORA <small> · DEMO 0.1</small></div>
+ <div id="status" class="panel">VERDELIA · Pradera inicial<br><span id="party">Equipo: ninguno</span></div>
+ <div id="message" class="panel"></div>
+ <div id="controls">
+  <div class="pad">
+   <button class="ctrl up" data-dir="up">▲</button><button class="ctrl left" data-dir="left">◀</button><button class="ctrl down" data-dir="down">▼</button><button class="ctrl right" data-dir="right">▶</button>
+  </div>
+  <div class="actions">
+   <button class="action" id="run">CORRER</button>
+   <button class="action" id="interact">INVESTIGAR</button>
+   <button class="action" id="capture">LANZAR POKÉ BALL</button>
+  </div>
+ </div>
+</div>
+<div id="modal">
+ <div id="card">
+  <h1>Pokémon Legends – Aurora</h1>
+  <p><b>Primera demo jugable · Verdelia</b><br>Explora la pradera, acércate al Pokémon salvaje y prueba a capturarlo. Esta primera prueba usa gráficos 2D provisionales para comprobar movimiento y controles; el objetivo final sigue siendo el juego 3D que estamos diseñando.</p>
+  <p>Elige tu inicial:</p>
+  <div class="choices">
+   <button type="button" class="choice selected" data-starter="Turtwig" onclick="chooseStarter('Turtwig')">🌿 Turtwig<br><small>Planta / Acero</small></button>
+   <button type="button" class="choice" data-starter="Froakie" onclick="chooseStarter('Froakie')">❄️ Froakie<br><small>Agua / Hielo</small></button>
+   <button type="button" class="choice" data-starter="Charmander" onclick="chooseStarter('Charmander')">🔥 Charmander<br><small>Fuego / Fantasma</small></button>
+  </div>
+  <p id="chosenStarter" aria-live="polite"><b>Inicial seleccionado: Turtwig</b></p>
+  <button id="start" type="button" onclick="startGame()" ontouchend="startGame()">COMENZAR AVENTURA</button>
+  <p><small>Controles: flechas en pantalla o WASD/flechas del teclado. «Correr» aumenta la velocidad. «Investigar» busca Pokémon cercanos.</small></p>
+ </div>
+</div>
+<script>
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+let W=0,H=0,scale=1,started=false,starter='Turtwig',running=false,found=false,caught=false,near=false;
+const world={w:1500,h:1000};
+const player={x:260,y:500,r:17,dir:'down'};
+const wild={x:850,y:420,r:24,type:'dark',active:true};
+const keys={};
+const camera={x:0,y:0};
+function resize(){W=canvas.width=Math.floor(innerWidth*devicePixelRatio);H=canvas.height=Math.floor(innerHeight*devicePixelRatio);canvas.style.width=innerWidth+'px';canvas.style.height=innerHeight+'px';ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);W=innerWidth;H=innerHeight;}
+addEventListener('resize',resize);resize();
+function rounded(x,y,w,h,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+function drawTree(x,y){ctx.fillStyle='#65452f';ctx.fillRect(x-5,y,10,24);ctx.fillStyle='#276b49';ctx.beginPath();ctx.arc(x,y-5,22,0,Math.PI*2);ctx.fill();ctx.fillStyle='#39865a';ctx.beginPath();ctx.arc(x-9,y-13,13,0,Math.PI*2);ctx.fill()}
+const trees=[];for(let i=0;i<55;i++)trees.push({x:30+(i*197)%1440,y:25+(i*131)%940});
+function drawPokemon(x,y,name,dark=false){ctx.save();ctx.translate(x,y);
+ if(dark){ctx.shadowColor='#9d5bff';ctx.shadowBlur=18;ctx.fillStyle='#342345'}else{ctx.fillStyle='#e6f2ed'}
+ ctx.beginPath();ctx.ellipse(0,3,23,18,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle=dark?'#a66cff':'#70b6a0';ctx.beginPath();ctx.arc(0,-13,15,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle=dark?'#f3d9ff':'#203b43';ctx.beginPath();ctx.arc(-5,-15,3,0,Math.PI*2);ctx.arc(6,-15,3,0,Math.PI*2);ctx.fill();
+ if(dark){ctx.strokeStyle='#bd8aff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,31,0,Math.PI*2);ctx.stroke()}
+ ctx.restore();ctx.fillStyle='white';ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.fillText(dark?'Pokémon oscuro':name,x,y+39);
+}
+function drawPlayer(x,y){ctx.save();ctx.translate(x,y);ctx.fillStyle='#243a54';ctx.beginPath();ctx.ellipse(0,9,14,17,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#f1c99e';ctx.beginPath();ctx.arc(0,-11,11,0,Math.PI*2);ctx.fill();ctx.fillStyle='#dceaf2';ctx.beginPath();ctx.arc(0,-16,12,Math.PI,Math.PI*2);ctx.fill();ctx.fillStyle='#e8bd62';ctx.fillRect(-9,5,18,5);ctx.restore()}
+function draw(){
+ ctx.clearRect(0,0,W,H);const zoom=Math.min(W/850,H/560);const viewW=W/zoom,viewH=H/zoom;
+ camera.x=Math.max(0,Math.min(world.w-viewW,player.x-viewW/2));camera.y=Math.max(0,Math.min(world.h-viewH,player.y-viewH/2));
+ ctx.save();ctx.scale(zoom,zoom);ctx.translate(-camera.x,-camera.y);
+ ctx.fillStyle='#8ec58c';ctx.fillRect(0,0,world.w,world.h);
+ // patches of grass and paths
+ for(let i=0;i<18;i++){ctx.fillStyle=i%2?'#80b77f':'#9bce91';ctx.beginPath();ctx.ellipse((i*173)%1450,(i*113)%950,100,55,(i%4)*.4,0,Math.PI*2);ctx.fill()}
+ ctx.strokeStyle='#d8c99a';ctx.lineWidth=58;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(0,720);ctx.quadraticCurveTo(400,640,620,730);ctx.quadraticCurveTo(900,800,1500,570);ctx.stroke();
+ trees.forEach(t=>drawTree(t.x,t.y));
+ // lake
+ ctx.fillStyle='#5ca9c2';ctx.beginPath();ctx.ellipse(1130,790,190,95,-.2,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#a5e4e8';ctx.lineWidth=5;ctx.stroke();
+ if(wild.active)drawPokemon(wild.x,wild.y,'',true);
+ drawPlayer(player.x,player.y);
+ ctx.restore();
+ // encounter hint
+ const d=Math.hypot(player.x-wild.x,player.y-wild.y);near=d<100;
+ if(near&&wild.active){const el=document.getElementById('message');el.style.display='block';el.textContent='¡Hay un Pokémon oscuro cerca! Pulsa INVESTIGAR o LANZAR POKÉ BALL.'}else if(!document.getElementById('modal').style.display||document.getElementById('modal').style.display==='none'){document.getElementById('message').style.display='none'}
+ requestAnimationFrame(draw);
+}
+function say(t){const e=document.getElementById('message');e.style.display='block';e.textContent=t;setTimeout(()=>{if(!near)e.style.display='none'},2600)}
+function move(dx,dy){if(!started)return;const speed=running?4.4:2.5;player.x=Math.max(20,Math.min(world.w-20,player.x+dx*speed));player.y=Math.max(20,Math.min(world.h-20,player.y+dy*speed));}
+function tick(){if(!started)return;let dx=0,dy=0;if(keys.up||keys.ArrowUp||keys.w)dy--;if(keys.down||keys.ArrowDown||keys.s)dy++;if(keys.left||keys.ArrowLeft||keys.a)dx--;if(keys.right||keys.ArrowRight||keys.d)dx++;if(dx||dy){let l=Math.hypot(dx,dy);move(dx/l,dy/l)}requestAnimationFrame(tick)}
+document.querySelectorAll('[data-dir]').forEach(b=>{const dir=b.dataset.dir;b.addEventListener('pointerdown',e=>{e.preventDefault();keys[dir]=true;b.setPointerCapture(e.pointerId)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,()=>keys[dir]=false))});
+addEventListener('keydown',e=>{keys[e.key]=true;if(e.key.startsWith('Arrow'))e.preventDefault()});addEventListener('keyup',e=>keys[e.key]=false);
+document.getElementById('run').addEventListener('pointerdown',()=>running=true);['pointerup','pointercancel','pointerleave'].forEach(ev=>document.getElementById('run').addEventListener(ev,()=>running=false));
+window.chooseStarter = function(name){
+ starter=name;
+ document.querySelectorAll('.choice[data-starter]').forEach(function(button){
+   const active=button.getAttribute('data-starter')===name;
+   button.classList.toggle('selected',active);
+   button.setAttribute('aria-pressed',active?'true':'false');
+ });
+ const chosen=document.getElementById('chosenStarter');
+ if(chosen) chosen.textContent='Inicial seleccionado: '+name;
+};
+window.startGame = function(){
+ if(started) return;
+ started=true;
+ var modal=document.getElementById('modal');
+ modal.style.display='none';
+ document.getElementById('party').textContent='Inicial: '+starter;
+ say('¡Bienvenido a Verdelia! Explora y busca Pokémon.');
+ tick();
+};
+document.getElementById('interact').onclick=()=>{if(!started)return;if(near&&wild.active){found=true;say('¡Has encontrado un Pokémon oscuro! Su aura morada parece inestable.');}else say('Investigas la hierba alta... Busca cerca del Pokémon que ves en el mapa.')};
+document.getElementById('capture').onclick=()=>{if(!started)return;if(!near||!wild.active){say('No hay ningún Pokémon lo bastante cerca.');return}if(!found){say('Primero acércate y pulsa INVESTIGAR.');return}if(!caught){caught=true;wild.active=false;document.getElementById('party').textContent='Inicial: '+starter+' · Pokémon recuperado';say('¡Captura conseguida! La energía oscura se desvanece y el Pokémon vuelve a la normalidad.');}else say('Ya has recuperado a este Pokémon.')};
+draw();
+</script>
+</body>
+</html>
