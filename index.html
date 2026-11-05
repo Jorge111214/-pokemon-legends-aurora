@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Pokémon Legends – Aurora | Demo</title>
+<style>
+:root{--ink:#17211b;--green:#246b43;--cream:#f5f1df;--red:#b83a42}
+*{box-sizing:border-box} body{margin:0;background:#17251d;color:#fff;font-family:system-ui,-apple-system,sans-serif;touch-action:manipulation}
+main{max-width:900px;margin:auto;padding:14px}
+h1{font-size:clamp(25px,5vw,42px);margin:6px 0;color:#dff6d7;text-align:center}
+.sub{text-align:center;color:#c5d8c4;margin:0 0 14px}
+.panel{background:#f5f1df;color:#17211b;border-radius:18px;padding:16px;box-shadow:0 8px 25px #0005}
+button{border:0;border-radius:12px;padding:12px 16px;font-weight:800;font-size:16px;background:#246b43;color:white}
+button:active{transform:scale(.97)}button:disabled{opacity:.4}
+#starters{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.starter{background:#fff;border:3px solid transparent;color:#17211b;padding:10px 5px;min-height:120px}
+.starter.selected{border-color:#e39b27;background:#fff7df}
+.emoji{display:block;font-size:42px;margin-bottom:4px}
+small{display:block;font-weight:500}
+#game{display:none}
+#hud{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px;color:#17211b;font-weight:700}
+canvas{width:100%;height:auto;display:block;border-radius:14px;background:#9bcf83;touch-action:none}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.pad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(2,45px);gap:4px;justify-content:center}
+.pad button{padding:4px;font-size:20px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-content:center;justify-content:center}
+.actions button{font-size:14px;padding:11px}
+#message{min-height:42px;margin:10px 0 0;font-weight:700;text-align:center;color:#183d27}
+.note{font-size:12px;text-align:center;color:#d1dfd0;margin:12px 0}
+@media(max-width:500px){main{padding:9px}.panel{padding:12px}#starters{gap:5px}.starter{font-size:13px;min-height:110px}.emoji{font-size:34px}.controls{grid-template-columns:1fr}.pad{grid-template-columns:repeat(3,54px)}}
+</style>
+</head>
+<body>
+<main>
+<h1>Pokémon Legends – Aurora</h1>
+<p class="sub">Demo jugable · Región de Verdelia</p>
+<section id="choose" class="panel">
+<h2>¡Elige tu compañero!</h2>
+<p>Escoge uno de los tres iniciales regionales de Aurora.</p>
+<div id="starters">
+<button class="starter" data-p="turtwig"><span class="emoji">🌱</span><b>Turtwig de Aurora</b><small>Planta / Acero</small></button>
+<button class="starter" data-p="froakie"><span class="emoji">🐸</span><b>Froakie de Aurora</b><small>Agua / Hielo</small></button>
+<button class="starter" data-p="charmander"><span class="emoji">🔥</span><b>Charmander de Aurora</b><small>Fuego / Fantasma</small></button>
+</div>
+<p id="pick" aria-live="polite">Selecciona un Pokémon para continuar.</p>
+<button id="start" disabled>Comenzar aventura</button>
+</section>
+<section id="game" class="panel">
+<div id="hud"><span id="companion">Compañero: —</span><span>📍 Verdelia</span><span id="count">Pokémon liberados: 0/1</span></div>
+<canvas id="world" width="720" height="420" aria-label="Mapa de Verdelia"></canvas>
+<div class="controls">
+<div class="pad">
+<span></span><button data-move="up">▲</button><span></span>
+<button data-move="left">◀</button><button data-move="down">▼</button><button data-move="right">▶</button>
+</div>
+<div class="actions">
+<button id="run">Correr: no</button>
+<button id="inspect">Investigar</button>
+<button id="ball">Lanzar Poké Ball</button>
+</div>
+</div>
+<p id="message" aria-live="polite">Explora el bosque y acércate al Pokémon oscuro.</p>
+</section>
+<p class="note">Prototipo inicial 2D para probar controles y mecánicas. No es todavía el juego 3D completo.</p>
+</main>
+<script>
+(()=>{
+const names={turtwig:"Turtwig de Aurora",froakie:"Froakie de Aurora",charmander:"Charmander de Aurora"};
+let selected=null,player={x:100,y:210},dark={x:555,y:210},running=false,investigated=false,freed=false,held=null;
+const $=id=>document.getElementById(id),canvas=$("world"),ctx=canvas.getContext("2d");
+document.querySelectorAll(".starter").forEach(b=>b.addEventListener("click",()=>{
+ document.querySelectorAll(".starter").forEach(x=>x.classList.remove("selected"));
+ b.classList.add("selected");selected=b.dataset.p;$("pick").textContent="Has elegido a "+names[selected]+".";
+ $("start").disabled=false;
+}));
+$("start").addEventListener("click",()=>{
+ if(!selected)return;$("choose").style.display="none";$("game").style.display="block";
+ $("companion").textContent="Compañero: "+names[selected];draw();
+});
+function draw(){
+ ctx.clearRect(0,0,720,420);
+ ctx.fillStyle="#9bcf83";ctx.fillRect(0,0,720,420);
+ // grass patches and path
+ ctx.fillStyle="#79b76d";for(let i=0;i<24;i++){let x=(i*97)%720,y=(i*61)%420;ctx.beginPath();ctx.ellipse(x,y,22,10,.3,0,Math.PI*2);ctx.fill()}
+ ctx.fillStyle="#d9c58b";ctx.beginPath();ctx.moveTo(0,330);ctx.quadraticCurveTo(250,260,380,350);ctx.quadraticCurveTo(560,420,720,300);ctx.lineTo(720,420);ctx.lineTo(0,420);ctx.fill();
+ // trees
+ for(const [x,y] of [[55,65],[180,80],[330,65],[650,70],[80,350],[640,350]]){ctx.fillStyle="#75543a";ctx.fillRect(x-7,y+8,14,28);ctx.fillStyle="#276b42";ctx.beginPath();ctx.arc(x,y,28,0,Math.PI*2);ctx.fill()}
+ // dark pokemon
+ if(!freed){ctx.fillStyle="#372b4f";ctx.beginPath();ctx.arc(dark.x,dark.y,23,0,Math.PI*2);ctx.fill();ctx.fillStyle="#a855d6";ctx.beginPath();ctx.arc(dark.x,dark.y,14,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font="bold 13px sans-serif";ctx.fillText("?",dark.x-4,dark.y+5);ctx.fillStyle="#24152e";ctx.font="bold 13px sans-serif";ctx.fillText("Pokémon oscuro",dark.x-47,dark.y-34)}
+ // player
+ ctx.fillStyle="#275c9b";ctx.beginPath();ctx.arc(player.x,player.y,17,0,Math.PI*2);ctx.fill();ctx.fillStyle="#f3c6a4";ctx.beginPath();ctx.arc(player.x,player.y-8,8,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font="bold 12px sans-serif";ctx.fillText("Tú",player.x-8,player.y+34);
+}
+function near(){return Math.hypot(player.x-dark.x,player.y-dark.y)<65}
+function move(dir){if(freed)return;let d=running?22:12;if(dir==="up")player.y-=d;if(dir==="down")player.y+=d;if(dir==="left")player.x-=d;if(dir==="right")player.x+=d;player.x=Math.max(20,Math.min(700,player.x));player.y=Math.max(25,Math.min(390,player.y));draw();if(near())$("message").textContent="¡Estás cerca del Pokémon oscuro! Pulsa Investigar."}
+document.querySelectorAll("[data-move]").forEach(b=>{
+ const dir=b.dataset.move;b.addEventListener("click",()=>move(dir));
+ b.addEventListener("touchstart",e=>{e.preventDefault();move(dir)},{passive:false});
+});
+$("run").addEventListener("click",()=>{running=!running;$("run").textContent="Correr: "+(running?"sí":"no")});
+$("inspect").addEventListener("click",()=>{
+ if(freed){$("message").textContent="El Pokémon ya está a salvo.";return}
+ if(!near()){$("message").textContent="Acércate un poco más al Pokémon oscuro.";return}
+ investigated=true;$("message").textContent="¡Has descubierto que la energía oscura lo está controlando! Ahora puedes lanzar una Poké Ball.";
+});
+$("ball").addEventListener("click",()=>{
+ if(freed){$("message").textContent="¡Misión completada! El Pokémon ha recuperado su estado normal.";return}
+ if(!near()){$("message").textContent="Tienes que acercarte al Pokémon antes de lanzar la Poké Ball.";return}
+ if(!investigated){$("message").textContent="Primero investiga al Pokémon oscuro.";return}
+ freed=true;$("count").textContent="Pokémon liberados: 1/1";$("message").textContent="¡Lo has conseguido! La energía oscura desaparece y el Pokémon vuelve a la normalidad. ¡Misión completada!";
+ draw();
+});
+canvas.addEventListener("click",e=>{const r=canvas.getBoundingClientRect();player.x=(e.clientX-r.left)*canvas.width/r.width;player.y=(e.clientY-r.top)*canvas.height/r.height;draw()});
+})();
+</script>
+</body>
+</html>
