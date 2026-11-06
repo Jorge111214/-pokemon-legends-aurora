@@ -3,115 +3,170 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Pokémon Legends – Aurora | Demo</title>
+<meta name="theme-color" content="#101b2c">
+<meta name="description" content="Pokémon Legends – Aurora: una aventura Pokémon en una nueva región.">
+<title>Pokémon Legends – Aurora</title>
 <style>
-:root{--ink:#17211b;--green:#246b43;--cream:#f5f1df;--red:#b83a42}
-*{box-sizing:border-box} body{margin:0;background:#17251d;color:#fff;font-family:system-ui,-apple-system,sans-serif;touch-action:manipulation}
-main{max-width:900px;margin:auto;padding:14px}
-h1{font-size:clamp(25px,5vw,42px);margin:6px 0;color:#dff6d7;text-align:center}
-.sub{text-align:center;color:#c5d8c4;margin:0 0 14px}
-.panel{background:#f5f1df;color:#17211b;border-radius:18px;padding:16px;box-shadow:0 8px 25px #0005}
-button{border:0;border-radius:12px;padding:12px 16px;font-weight:800;font-size:16px;background:#246b43;color:white}
-button:active{transform:scale(.97)}button:disabled{opacity:.4}
-#starters{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.starter{background:#fff;border:3px solid transparent;color:#17211b;padding:10px 5px;min-height:120px}
-.starter.selected{border-color:#e39b27;background:#fff7df}
-.emoji{display:block;font-size:42px;margin-bottom:4px}
-small{display:block;font-weight:500}
-#game{display:none}
-#hud{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px;color:#17211b;font-weight:700}
-canvas{width:100%;height:auto;display:block;border-radius:14px;background:#9bcf83;touch-action:none}
-.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-.pad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(2,45px);gap:4px;justify-content:center}
-.pad button{padding:4px;font-size:20px}
-.actions{display:flex;flex-wrap:wrap;gap:8px;align-content:center;justify-content:center}
-.actions button{font-size:14px;padding:11px}
-#message{min-height:42px;margin:10px 0 0;font-weight:700;text-align:center;color:#183d27}
-.note{font-size:12px;text-align:center;color:#d1dfd0;margin:12px 0}
-@media(max-width:500px){main{padding:9px}.panel{padding:12px}#starters{gap:5px}.starter{font-size:13px;min-height:110px}.emoji{font-size:34px}.controls{grid-template-columns:1fr}.pad{grid-template-columns:repeat(3,54px)}}
+:root{--navy:#101b2c;--ice:#b9e9ff;--gold:#f5d27a;--panel:rgba(10,20,35,.91)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101b2c;color:white;font-family:system-ui,-apple-system,Segoe UI,sans-serif;touch-action:none}
+#game{position:fixed;inset:0}canvas{display:block;width:100%;height:100%}
+#hud{position:fixed;inset:0;pointer-events:none}
+.panel{pointer-events:auto;background:var(--panel);border:1px solid rgba(185,233,255,.35);border-radius:18px;padding:18px;box-shadow:0 14px 40px #0008;backdrop-filter:blur(12px);max-width:min(620px,94vw);max-height:90vh;overflow:auto}
+.screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;background:linear-gradient(180deg,#08132377,#081323aa);pointer-events:auto}
+.hidden{display:none!important}
+h1,h2,h3,p{margin:0 0 10px}h1{font-size:clamp(27px,6vw,48px);line-height:1.04;color:#e9f8ff;text-shadow:0 3px 18px #4ab7ff66}h2{font-size:clamp(21px,4vw,30px)}p{line-height:1.45;color:#d9e7f5}
+.sub{color:#9fdcff;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:11px}
+button,input{font:inherit}button{border:0;border-radius:12px;padding:12px 17px;background:linear-gradient(135deg,#64c8f2,#3985cb);color:#061526;font-weight:800;cursor:pointer;box-shadow:0 5px 15px #0003}
+button.secondary{background:#273d56;color:#eaf7ff;border:1px solid #6484a4}button:disabled{opacity:.4}
+input{width:100%;padding:12px;border-radius:10px;border:1px solid #6b91b0;background:#0c1726;color:white;margin:6px 0 12px}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1}
+.choice{display:flex;gap:12px;align-items:center;text-align:left;width:100%;margin:8px 0;background:#172a40;color:white;border:1px solid #45627e}
+.choice img{width:76px;height:76px;object-fit:contain;background:#eaf6ff;border-radius:12px;padding:4px}
+.choice small{display:block;color:#b7cde0;font-weight:500}
+.note{font-size:12px;color:#a9bfd3}
+#toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);padding:10px 16px;background:#0b1b2bdd;border:1px solid #7bbde5;border-radius:30px;z-index:8;display:none;text-align:center;max-width:92vw}
+#storyBox{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);width:min(720px,94vw);pointer-events:auto}
+#storyBox .panel{max-width:none}
+#storyText{min-height:44px}
+#controls{position:fixed;bottom:18px;left:18px;display:none;pointer-events:auto}
+.pad{display:grid;grid-template-columns:48px 48px 48px;grid-template-rows:44px 44px 44px;gap:4px}
+.pad button{padding:4px;background:#10253dcc;color:white;border:1px solid #9bdcff88;box-shadow:none}
+.pad .up{grid-column:2}.pad .left{grid-column:1;grid-row:2}.pad .down{grid-column:2;grid-row:2}.pad .right{grid-column:3;grid-row:2}
+#actionButtons{position:fixed;right:16px;bottom:24px;display:none;gap:8px;pointer-events:auto;flex-direction:column}
+#actionButtons button{padding:12px;background:#10253dcc;color:white;border:1px solid #9bdcff88}
+#topLabel{position:fixed;left:12px;top:12px;display:none;background:#10253dcc;padding:9px 13px;border-radius:12px;border:1px solid #9bdcff66;font-size:13px}
+.starterImg{width:110px;height:110px;object-fit:contain;background:#eaf6ff;border-radius:14px;padding:5px}
+#battleStage{display:flex;justify-content:space-around;align-items:center;gap:8px;margin:14px 0}
+#battleStage img{width:clamp(95px,25vw,150px);height:clamp(95px,25vw,150px);object-fit:contain;filter:drop-shadow(0 8px 8px #0008)}
+.hp{height:9px;background:#34475b;border-radius:20px;overflow:hidden;margin:5px 0 10px}.hp span{display:block;height:100%;background:#72e49a;width:100%;transition:width .3s}
+@media(max-width:520px){.panel{padding:15px}.choice img{width:64px;height:64px}#storyBox{bottom:8px}#controls{left:8px;bottom:8px}#actionButtons{right:8px;bottom:12px}}
 </style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
-<main>
-<h1>Pokémon Legends – Aurora</h1>
-<p class="sub">Demo jugable · Región de Verdelia</p>
-<section id="choose" class="panel">
-<h2>¡Elige tu compañero!</h2>
-<p>Escoge uno de los tres iniciales regionales de Aurora.</p>
-<div id="starters">
-<button class="starter" data-p="turtwig"><span class="emoji">🌱</span><b>Turtwig de Aurora</b><small>Planta / Acero</small></button>
-<button class="starter" data-p="froakie"><span class="emoji">🐸</span><b>Froakie de Aurora</b><small>Agua / Hielo</small></button>
-<button class="starter" data-p="charmander"><span class="emoji">🔥</span><b>Charmander de Aurora</b><small>Fuego / Fantasma</small></button>
+<div id="game"></div>
+<div id="hud">
+ <div id="topLabel">VERDELIA · Comienzo de la aventura</div>
+ <div id="toast"></div>
+ <div id="controls"><div class="pad">
+  <button class="up" data-move="forward">▲</button><button class="left" data-move="left">◀</button><button class="down" data-move="back">▼</button><button class="right" data-move="right">▶</button>
+ </div></div>
+ <div id="actionButtons"><button id="runBtn">Correr</button><button id="talkBtn">Hablar</button></div>
+ <div id="storyBox" class="hidden"><div class="panel"><div class="sub" id="storyWho">Aurora</div><p id="storyText"></p><div style="display:flex;justify-content:flex-end"><button id="storyNext">Continuar ▶</button></div></div></div>
 </div>
-<p id="pick" aria-live="polite">Selecciona un Pokémon para continuar.</p>
-<button id="start" disabled>Comenzar aventura</button>
-</section>
-<section id="game" class="panel">
-<div id="hud"><span id="companion">Compañero: —</span><span>📍 Verdelia</span><span id="count">Pokémon liberados: 0/1</span></div>
-<canvas id="world" width="720" height="420" aria-label="Mapa de Verdelia"></canvas>
-<div class="controls">
-<div class="pad">
-<span></span><button data-move="up">▲</button><span></span>
-<button data-move="left">◀</button><button data-move="down">▼</button><button data-move="right">▶</button>
-</div>
-<div class="actions">
-<button id="run">Correr: no</button>
-<button id="inspect">Investigar</button>
-<button id="ball">Lanzar Poké Ball</button>
-</div>
-</div>
-<p id="message" aria-live="polite">Explora el bosque y acércate al Pokémon oscuro.</p>
-</section>
-<p class="note">Prototipo inicial 2D para probar controles y mecánicas. No es todavía el juego 3D completo.</p>
-</main>
-<script>
-(()=>{
-const names={turtwig:"Turtwig de Aurora",froakie:"Froakie de Aurora",charmander:"Charmander de Aurora"};
-let selected=null,player={x:100,y:210},dark={x:555,y:210},running=false,investigated=false,freed=false,held=null;
-const $=id=>document.getElementById(id),canvas=$("world"),ctx=canvas.getContext("2d");
-document.querySelectorAll(".starter").forEach(b=>b.addEventListener("click",()=>{
- document.querySelectorAll(".starter").forEach(x=>x.classList.remove("selected"));
- b.classList.add("selected");selected=b.dataset.p;$("pick").textContent="Has elegido a "+names[selected]+".";
- $("start").disabled=false;
-}));
-$("start").addEventListener("click",()=>{
- if(!selected)return;$("choose").style.display="none";$("game").style.display="block";
- $("companion").textContent="Compañero: "+names[selected];draw();
-});
-function draw(){
- ctx.clearRect(0,0,720,420);
- ctx.fillStyle="#9bcf83";ctx.fillRect(0,0,720,420);
- // grass patches and path
- ctx.fillStyle="#79b76d";for(let i=0;i<24;i++){let x=(i*97)%720,y=(i*61)%420;ctx.beginPath();ctx.ellipse(x,y,22,10,.3,0,Math.PI*2);ctx.fill()}
- ctx.fillStyle="#d9c58b";ctx.beginPath();ctx.moveTo(0,330);ctx.quadraticCurveTo(250,260,380,350);ctx.quadraticCurveTo(560,420,720,300);ctx.lineTo(720,420);ctx.lineTo(0,420);ctx.fill();
- // trees
- for(const [x,y] of [[55,65],[180,80],[330,65],[650,70],[80,350],[640,350]]){ctx.fillStyle="#75543a";ctx.fillRect(x-7,y+8,14,28);ctx.fillStyle="#276b42";ctx.beginPath();ctx.arc(x,y,28,0,Math.PI*2);ctx.fill()}
- // dark pokemon
- if(!freed){ctx.fillStyle="#372b4f";ctx.beginPath();ctx.arc(dark.x,dark.y,23,0,Math.PI*2);ctx.fill();ctx.fillStyle="#a855d6";ctx.beginPath();ctx.arc(dark.x,dark.y,14,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font="bold 13px sans-serif";ctx.fillText("?",dark.x-4,dark.y+5);ctx.fillStyle="#24152e";ctx.font="bold 13px sans-serif";ctx.fillText("Pokémon oscuro",dark.x-47,dark.y-34)}
- // player
- ctx.fillStyle="#275c9b";ctx.beginPath();ctx.arc(player.x,player.y,17,0,Math.PI*2);ctx.fill();ctx.fillStyle="#f3c6a4";ctx.beginPath();ctx.arc(player.x,player.y-8,8,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font="bold 12px sans-serif";ctx.fillText("Tú",player.x-8,player.y+34);
+
+<div id="start" class="screen"><div class="panel">
+ <div class="sub">Una nueva aventura comienza</div><h1>Pokémon Legends<br>– Aurora</h1>
+ <p>Explora Verdelia, conoce Pokémon extraordinarios y descubre el misterio de la energía oscura.</p>
+ <p class="note">Primera versión jugable 3D · Escenario inicial en desarrollo</p>
+ <button id="startBtn" style="width:100%;margin-top:8px">Comenzar aventura</button>
+</div></div>
+
+<div id="identity" class="screen hidden"><div class="panel">
+ <div class="sub">Tu aventura · 6 de noviembre</div><h2>¡Hoy cumples 10 años!</h2>
+ <p>Vives en Verdelia y llevas semanas esperando este día. Pero hoy te has despertado antes que nadie...</p>
+ <label>¿Cómo te llamas?</label><input id="heroName" maxlength="16" placeholder="Nombre del protagonista" value="Alex">
+ <div class="row"><button id="boyBtn">Chico</button><button id="girlBtn" class="secondary">Chica</button></div>
+ <p class="note" id="genderNote">Elige tu personaje. Podrás personalizar su ropa más adelante.</p>
+ <button id="identityNext" style="width:100%">Continuar</button>
+</div></div>
+
+<div id="rivalSetup" class="screen hidden"><div class="panel">
+ <div class="sub">Tu rival</div><h2>Alguien te espera en el laboratorio</h2>
+ <p>Tu rival tiene también 10 años. Le apasionan los combates Pokémon, es muy reservado y habla poco de sí mismo.</p>
+ <label>Elige su nombre</label><input id="rivalName" maxlength="16" value="Nico" placeholder="Nombre del rival">
+ <p class="note">Su sexo será el contrario al de tu protagonista.</p>
+ <button id="rivalNext" style="width:100%">Ir al laboratorio</button>
+</div></div>
+
+<div id="starterScreen" class="screen hidden"><div class="panel">
+ <div class="sub">Laboratorio de Verdelia · Profesora Celeste</div><h2>¡Elegid vuestro primer compañero!</h2>
+ <p>La Profesora Celeste os muestra tres Pokémon. Tú y tu rival elegiréis al mismo tiempo.</p>
+ <button class="choice" data-starter="Turtwig"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/387.png"><span><b>Turtwig de Aurora</b><small>Planta / Acero</small></span></button>
+ <button class="choice" data-starter="Froakie"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/656.png"><span><b>Froakie de Aurora</b><small>Agua / Hielo</small></span></button>
+ <button class="choice" data-starter="Charmander"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png"><span><b>Charmander de Aurora</b><small>Fuego / Fantasma</small></span></button>
+ <p class="note">Las ilustraciones son provisionales; más adelante las sustituiremos por los diseños regionales originales de Aurora.</p>
+</div></div>
+
+<div id="battle" class="screen hidden"><div class="panel">
+ <div class="sub">Primer combate · Verdelia</div><h2 id="battleTitle">¡Tu rival te reta!</h2>
+ <div id="battleStage">
+  <div style="text-align:center"><img id="playerMon" alt="Tu Pokémon"><b id="playerMonName">Tu Pokémon</b><div class="hp"><span id="playerHp"></span></div><small>PS: <span id="playerHpText">100</span>/100</small></div>
+  <div style="font-size:23px;font-weight:900;color:#f5d27a">VS</div>
+  <div style="text-align:center"><img id="rivalMon" alt="Pokémon rival"><b id="rivalMonName">Pokémon rival</b><div class="hp"><span id="rivalHp"></span></div><small>PS: <span id="rivalHpText">100</span>/100</small></div>
+ </div>
+ <p id="battleLog">¡El combate está a punto de comenzar!</p>
+ <div class="row"><button id="attackBtn">Atacar</button><button id="dodgeBtn" class="secondary">Esquivar</button></div>
+ <p class="note">Combate de prueba: estamos construyendo el sistema de combate en tiempo real.</p>
+</div></div>
+
+<div id="endBattle" class="screen hidden"><div class="panel">
+ <div class="sub">Primer combate terminado</div><h2 id="endTitle">¡Buen combate!</h2>
+ <p id="endText"></p><button id="enterWorld" style="width:100%">Continuar aventura</button>
+</div></div>
+
+<script type="module">
+import * as THREE from 'three';
+const $=id=>document.getElementById(id);
+let scene,camera,renderer,clock,player,worldReady=false,gender='boy',heroName='Alex',rivalName='Nico',chosen='',rivalChosen='',battleDone=false;
+let keys={},moving=false,run=false,storyQueue=[],storyIndex=0,playerHP=100,rivalHP=100,attackBusy=false;
+const mons={
+ Turtwig:{id:387,name:'Turtwig de Aurora',type:'Planta/Acero',img:'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/387.png'},
+ Froakie:{id:656,name:'Froakie de Aurora',type:'Agua/Hielo',img:'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/656.png'},
+ Charmander:{id:4,name:'Charmander de Aurora',type:'Fuego/Fantasma',img:'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png'}
+};
+function init3D(){
+ const host=$('game');scene=new THREE.Scene();scene.background=new THREE.Color(0x9bd6ed);scene.fog=new THREE.Fog(0x9bd6ed,24,85);
+ camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.1,150);
+ renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;host.appendChild(renderer.domElement);
+ scene.add(new THREE.HemisphereLight(0xdff5ff,0x557044,2));
+ const sun=new THREE.DirectionalLight(0xfff0cf,2.4);sun.position.set(-15,25,12);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
+ const ground=new THREE.Mesh(new THREE.PlaneGeometry(180,180),new THREE.MeshStandardMaterial({color:0x5e9b58,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+ // Camino
+ const path=new THREE.Mesh(new THREE.PlaneGeometry(8,100),new THREE.MeshStandardMaterial({color:0xc9b58c,roughness:1}));path.rotation.x=-Math.PI/2;path.position.set(0,.015,-22);scene.add(path);
+ // Colinas
+ for(let i=0;i<18;i++){let m=new THREE.Mesh(new THREE.SphereGeometry(1,12,10),new THREE.MeshStandardMaterial({color:i%2?0x78ad6c:0x6c9e66}));m.scale.set(8+Math.random()*8,2+Math.random()*3,7+Math.random()*8);m.position.set((Math.random()-.5)*95,-1.7,-35-Math.random()*45);scene.add(m)}
+ // Árboles low-poly
+ for(let i=0;i<65;i++){let x=(Math.random()-.5)*75,z=-Math.random()*75-5;if(Math.abs(x)<5&&z>-48)continue;tree(x,z)}
+ // Casas y laboratorio
+ house(-12,-19,0x9b6c55);house(12,-27,0x648ba6);lab(0,-39);
+ // Protagonista
+ player=new THREE.Group();const body=new THREE.Mesh(new THREE.CapsuleGeometry(.42,.9,4,8),new THREE.MeshStandardMaterial({color:0x285a8b}));body.position.y=.9;body.castShadow=true;player.add(body);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.34,16,12),new THREE.MeshStandardMaterial({color:0xf1c9a4}));head.position.y=1.72;head.castShadow=true;player.add(head);
+ const cap=new THREE.Mesh(new THREE.SphereGeometry(.37,16,8,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:0x26394d}));cap.position.y=1.98;player.add(cap);
+ player.position.set(0,0,8);scene.add(player);
+ camera.position.set(0,5,14);camera.lookAt(0,1,5);
+ clock=new THREE.Clock();worldReady=true;animate();
 }
-function near(){return Math.hypot(player.x-dark.x,player.y-dark.y)<65}
-function move(dir){if(freed)return;let d=running?22:12;if(dir==="up")player.y-=d;if(dir==="down")player.y+=d;if(dir==="left")player.x-=d;if(dir==="right")player.x+=d;player.x=Math.max(20,Math.min(700,player.x));player.y=Math.max(25,Math.min(390,player.y));draw();if(near())$("message").textContent="¡Estás cerca del Pokémon oscuro! Pulsa Investigar."}
-document.querySelectorAll("[data-move]").forEach(b=>{
- const dir=b.dataset.move;b.addEventListener("click",()=>move(dir));
- b.addEventListener("touchstart",e=>{e.preventDefault();move(dir)},{passive:false});
-});
-$("run").addEventListener("click",()=>{running=!running;$("run").textContent="Correr: "+(running?"sí":"no")});
-$("inspect").addEventListener("click",()=>{
- if(freed){$("message").textContent="El Pokémon ya está a salvo.";return}
- if(!near()){$("message").textContent="Acércate un poco más al Pokémon oscuro.";return}
- investigated=true;$("message").textContent="¡Has descubierto que la energía oscura lo está controlando! Ahora puedes lanzar una Poké Ball.";
-});
-$("ball").addEventListener("click",()=>{
- if(freed){$("message").textContent="¡Misión completada! El Pokémon ha recuperado su estado normal.";return}
- if(!near()){$("message").textContent="Tienes que acercarte al Pokémon antes de lanzar la Poké Ball.";return}
- if(!investigated){$("message").textContent="Primero investiga al Pokémon oscuro.";return}
- freed=true;$("count").textContent="Pokémon liberados: 1/1";$("message").textContent="¡Lo has conseguido! La energía oscura desaparece y el Pokémon vuelve a la normalidad. ¡Misión completada!";
- draw();
-});
-canvas.addEventListener("click",e=>{const r=canvas.getBoundingClientRect();player.x=(e.clientX-r.left)*canvas.width/r.width;player.y=(e.clientY-r.top)*canvas.height/r.height;draw()});
-})();
+function tree(x,z){const g=new THREE.Group();let trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18,.25,1.7,7),new THREE.MeshStandardMaterial({color:0x765039}));trunk.position.y=.85;trunk.castShadow=true;g.add(trunk);for(let j=0;j<3;j++){let crown=new THREE.Mesh(new THREE.ConeGeometry(1.2-j*.17,2.1,7),new THREE.MeshStandardMaterial({color:j===0?0x39784d:0x4f9659}));crown.position.y=2+j*.75;crown.castShadow=true;g.add(crown)}g.position.set(x,0,z);scene.add(g)}
+function house(x,z,color){const g=new THREE.Group();let base=new THREE.Mesh(new THREE.BoxGeometry(6,3.5,5),new THREE.MeshStandardMaterial({color:0xe6d5b9}));base.position.y=1.75;g.add(base);let roof=new THREE.Mesh(new THREE.ConeGeometry(4.5,2.5,4),new THREE.MeshStandardMaterial({color}));roof.rotation.y=Math.PI/4;roof.position.y=4.6;g.add(roof);let door=new THREE.Mesh(new THREE.BoxGeometry(.9,1.8,.12),new THREE.MeshStandardMaterial({color:0x65452f}));door.position.set(0,.9,2.56);g.add(door);g.position.set(x,0,z);scene.add(g)}
+function lab(x,z){const g=new THREE.Group();let b=new THREE.Mesh(new THREE.CylinderGeometry(5.2,5.7,5.5,8),new THREE.MeshStandardMaterial({color:0xe5edf0}));b.position.y=2.75;g.add(b);let roof=new THREE.Mesh(new THREE.ConeGeometry(6.1,2.7,8),new THREE.MeshStandardMaterial({color:0x4e829f}));roof.position.y=6.8;g.add(roof);let sign=new THREE.Mesh(new THREE.BoxGeometry(3,.7,.15),new THREE.MeshStandardMaterial({color:0x173d58}));sign.position.set(0,4.7,5.2);g.add(sign);g.position.set(x,0,z);scene.add(g)}
+function animate(){requestAnimationFrame(animate);if(!worldReady)return;const dt=Math.min(clock.getDelta(),.04);let dx=0,dz=0;if(keys.ArrowUp||keys.KeyW||keys.forward)dz-=1;if(keys.ArrowDown||keys.KeyS||keys.back)dz+=1;if(keys.ArrowLeft||keys.KeyA||keys.left)dx-=1;if(keys.ArrowRight||keys.KeyD||keys.right)dx+=1;
+ const len=Math.hypot(dx,dz);if(len){dx/=len;dz/=len;const speed=run?8:4.3;player.position.x+=dx*speed*dt;player.position.z+=dz*speed*dt;player.position.x=THREE.MathUtils.clamp(player.position.x,-28,28);player.position.z=THREE.MathUtils.clamp(player.position.z,-70,15);player.rotation.y=Math.atan2(dx,dz);moving=true}else moving=false;
+ const target=new THREE.Vector3(player.position.x,player.position.y+1.3,player.position.z);const desired=new THREE.Vector3(player.position.x,player.position.y+5.2,player.position.z+8.5);camera.position.lerp(desired,.09);camera.lookAt(target);renderer.render(scene,camera)}
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));$(id).classList.remove('hidden')}
+function toast(t){$('toast').textContent=t;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',2200)}
+function story(lines,done){storyQueue=lines;storyIndex=0;$('storyBox').classList.remove('hidden');$('storyWho').textContent=lines[0].who;$('storyText').textContent=lines[0].text;$('storyNext').onclick=()=>{storyIndex++;if(storyIndex>=storyQueue.length){$('storyBox').classList.add('hidden');done?.();return}$('storyWho').textContent=storyQueue[storyIndex].who;$('storyText').textContent=storyQueue[storyIndex].text}}
+function enterWorld(){show('game');$('topLabel').style.display='block';$('controls').style.display='block';$('actionButtons').style.display='flex';story([{who:'Profesora Celeste',text:'¡Felicidades por tu décimo cumpleaños! Hoy comienza una aventura que recordarás toda tu vida.'},{who:'Profesora Celeste',text:'Tu rival y tú habéis elegido a vuestro primer compañero. ¡Ahora es el momento de poner a prueba vuestro vínculo!'}],()=>{startBattle()})}
+function imageFor(k){return mons[k].img}
+function chooseStarter(k){chosen=k;const options=Object.keys(mons).filter(x=>x!==k);rivalChosen=options[Math.floor(Math.random()*options.length)];$('starterScreen').classList.add('hidden');$('playerMon').src=imageFor(chosen);$('rivalMon').src=imageFor(rivalChosen);$('playerMonName').textContent=mons[chosen].name;$('rivalMonName').textContent=mons[rivalChosen].name;story([{who:'',text:`Has elegido a ${mons[chosen].name}. ¡Tu nuevo compañero está encantado de conocerte!`},{who:rivalName,text:`Yo he elegido a ${mons[rivalChosen].name}. No pienso contenerme. ¡Vamos a combatir!`}],()=>{startBattle()})}
+function startBattle(){playerHP=100;rivalHP=100;updateHP();$('battleLog').textContent=`¡${rivalName} te reta a tu primer combate Pokémon!`;$('battleTitle').textContent=`¡${rivalName} te reta!`;show('battle')}
+function updateHP(){$('playerHp').style.width=playerHP+'%';$('rivalHp').style.width=rivalHP+'%';$('playerHpText').textContent=playerHP;$('rivalHpText').textContent=rivalHP}
+function finishBattle(){show('endBattle');$('endTitle').textContent='¡Primer combate completado!';$('endText').textContent=`${rivalName} te mira en silencio y asiente. La Profesora Celeste sonríe: «Esto solo acaba de empezar, ${heroName}». Ya puedes explorar Verdelia. La historia continuará desde aquí.`}
+function attack(){if(attackBusy)return;attackBusy=true;let hit=18+Math.floor(Math.random()*12);rivalHP=Math.max(0,rivalHP-hit);updateHP();$('battleLog').textContent=`¡${mons[chosen].name} lanza un ataque! ${mons[rivalChosen].name} recibe ${hit} puntos de daño.`;if(rivalHP<=0){setTimeout(finishBattle,700);return}setTimeout(()=>{let damage=10+Math.floor(Math.random()*13);playerHP=Math.max(0,playerHP-damage);updateHP();$('battleLog').textContent=`¡${mons[rivalChosen].name} contraataca! Tu Pokémon recibe ${damage} puntos de daño.`;if(playerHP<=0){playerHP=35;updateHP();$('battleLog').textContent='Tu Pokémon resiste y recupera fuerzas para continuar.'}attackBusy=false},850)}
+$('startBtn').onclick=()=>show('identity');
+$('boyBtn').onclick=()=>{gender='boy';$('boyBtn').classList.remove('secondary');$('girlBtn').classList.add('secondary');$('genderNote').textContent='Has elegido chico.'};
+$('girlBtn').onclick=()=>{gender='girl';$('girlBtn').classList.remove('secondary');$('boyBtn').classList.add('secondary');$('genderNote').textContent='Has elegido chica.'};
+$('identityNext').onclick=()=>{heroName=$('heroName').value.trim()||'Alex';show('rivalSetup')};
+$('rivalNext').onclick=()=>{rivalName=$('rivalName').value.trim()||'Rival';show('game');$('topLabel').style.display='block';$('controls').style.display='block';story([{who:'Narrador',text:`Es muy temprano en Verdelia. Hoy cumples 10 años y te has levantado antes de que salga el sol.`},{who:heroName,text:'¡Por fin ha llegado el día! Hoy empezaré mi aventura Pokémon.'},{who:'Narrador',text:`Sales de casa y caminas hacia el laboratorio. Allí te espera ${rivalName}, que también ha madrugado.`},{who:rivalName,text:'Llegas tarde... Bueno, da igual. Vamos a ver qué Pokémon nos ofrece la profesora.'},{who:'Profesora Celeste',text:'¡Bienvenidos! Me alegra ver que habéis llegado tan temprano. Hoy elegiréis a vuestro primer compañero Pokémon.'}],()=>show('starterScreen'))};
+document.querySelectorAll('[data-starter]').forEach(b=>b.onclick=()=>chooseStarter(b.dataset.starter));
+$('attackBtn').onclick=attack;$('dodgeBtn').onclick=()=>{$('battleLog').textContent='¡Has esquivado el ataque! En el próximo intercambio tendrás ventaja.';if(!attackBusy){rivalHP=Math.max(0,rivalHP-8);updateHP();if(rivalHP<=0)setTimeout(finishBattle,500)}};
+$('enterWorld').onclick=()=>{show('game');$('controls').style.display='block';$('actionButtons').style.display='flex';toast('¡Ya puedes explorar Verdelia! Usa las flechas o WASD.')};
+$('runBtn').onpointerdown=()=>run=true;$('runBtn').onpointerup=()=>run=false;$('runBtn').onpointerleave=()=>run=false;
+document.querySelectorAll('[data-move]').forEach(b=>{const d=b.dataset.move;b.onpointerdown=e=>{e.preventDefault();keys[d]=true};b.onpointerup=b.onpointerleave=b.onpointercancel=()=>keys[d]=false});
+$('talkBtn').onclick=()=>toast('La Profesora Celeste: «La historia antigua de Aurora guarda muchos secretos...»');
+addEventListener('keydown',e=>{keys[e.code]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault()});addEventListener('keyup',e=>keys[e.code]=false);
+addEventListener('resize',()=>{if(!renderer)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+init3D();
 </script>
-</body>
-</html>
+</body></html>
